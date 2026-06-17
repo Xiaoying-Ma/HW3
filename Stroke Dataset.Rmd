@@ -1,0 +1,1501 @@
+---
+title: "Characteristics and Contributors to Stroke Risk: Evidence from a Healthcare Stroke Dataset"
+author: "Xiaoying Ma"
+date: "06/19/2026"
+output:
+  html_document:
+    theme: yeti
+    toc: yes
+    toc_depth: 4
+    toc_float: yes
+    number_sections: yes
+    toc_collapsed: yes
+    code_folding: hide
+    code_download: yes
+    smooth_scroll: yes
+    highlight: tango
+    css: styles.css
+---
+
+```{css echo = FALSE}
+/* ============ CSS Styling for Lecture Notes ============ */
+
+body {
+  font-family: 'Segoe UI', 'Inter', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  color: #2d1b29;
+  background-color: #fdfafd;
+}
+
+#TOC::before {
+  content: "Table of Contents";
+  font-weight: bold;
+  font-size: 1.2em;
+  display: block;
+  color: navy;
+  margin-bottom: 10px;
+}
+
+
+div#TOC li {     /* table of content  */
+    list-style:upper-roman;
+    background-image:none;
+    background-repeat:none;
+    background-position:0;
+    /*font-weight: bold; */
+    font-size: 1.1em;
+    font-weight: 500;
+    color: #6E3061;
+}
+
+
+h1.title {
+  font-size: 26px;
+  color: #6E3061;
+  text-align: left;
+}
+
+h4.author { /* Header 4 - and the author and data headers use this too  */
+  font-size: 18px;
+  /*font-family: "Times New Roman", Times, serif;*/
+  color: #6E3061;
+  text-align: left;
+}
+h4.date { /* Header 4 - and the author and data headers use this too  */
+  font-size: 18px;
+  /*font-family: "Times New Roman", Times, serif;*/
+  color: #6E3061;
+  text-align: left;
+}
+
+
+h1 {
+  color: #6E3061;
+  border-bottom: 3px solid #6E3061;
+  padding-bottom: 8px;
+  margin-top: 40px;
+  font-weight: bold;
+  font-size: 2.2rem;
+}
+
+h2 {
+  color: #6E3061;
+  border-left: 5px solid #6E3061;
+  padding-left: 12px;
+  margin-top: 30px;
+  font-weight: bold;
+  font-size: 1.8rem;
+}
+
+h3 {
+  color: #8b4a7d;
+  margin-top: 24px;
+  font-weight: bold;
+  font-size: 1.8m;
+}
+
+h4 {
+  color: #a05f92;
+  margin-top: 18px;
+  font-weight: bold;
+  font-size: 1.4rem;
+}
+
+code {
+  background-color: #f4edf3;
+  color: #4a2040;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
+  font-size: 0.9em;
+  border: 1px solid #d4c0d1;
+}
+
+pre {
+  background-color: #f9f5f9;
+  border: 1px solid #d4c0d1;
+  border-left: 4px solid #6E3061;
+  border-radius: 6px;
+  padding: 14px;
+}
+
+pre code {
+  background-color: transparent;
+  border: none;
+  padding: 0;
+}
+
+blockquote {
+  background-color: #f4edf3;
+  border-left: 4px solid #6E3061;
+  padding: 12px 18px;
+  margin: 16px 0;
+  border-radius: 0 6px 6px 0;
+  color: #4a2040;
+}
+
+.note-box {
+  background-color: #f0e6ee;
+  border: 1px solid #c49bb8;
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin: 18px 0;
+}
+
+.note-box strong {
+  color: #6E3061;
+}
+
+.tip-box {
+  background-color: #e8f5e9;
+  border: 1px solid #81c784;
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin: 18px 0;
+}
+
+.tip-box strong {
+  color: #2e7d32;
+}
+
+.warning-box {
+  background-color: #fff3e0;
+  border: 1px solid #ffb74d;
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin: 18px 0;
+}
+
+.warning-box strong {
+  color: #e65100;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+}
+
+table th {
+  background-color: #6E3061;
+  color: white;
+  padding: 10px 12px;
+  text-align: left;
+  font-weight: 600;
+}
+
+table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid #d4c0d1;
+}
+
+table tr:nth-child(even) td {
+  background-color: #faf5f9;
+}
+
+table tr:hover td {
+  background-color: #f0e6ee;
+}
+
+.toc {
+  background-color: #faf5f9;
+  border: 1px solid #d4c0d1;
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin-bottom: 24px;
+}
+
+.figure {
+  border: 1px solid #e0d1db;
+  border-radius: 8px;
+  padding: 8px;
+  margin: 16px 0;
+  box-shadow: 0 2px 8px rgba(110, 48, 97, 0.08);
+}
+```
+
+```{r setup, include=FALSE}
+# ========================
+#  REQUIRED PACKAGES
+# ========================
+# Quick install and load for R Markdown
+packages <- c("knitr", "readr", "tidyverse", "plotly", "leaflet", "DT", "corrplot", 
+              "GGally", "MASS", "patchwork", "scales", 
+              "viridis", "RColorBrewer", "ggridges", "gghighlight", 
+              "ggrepel", "cowplot", "sf", "ggspatial", "knitr", 
+              "kableExtra", "gridExtra", "leaps", "ggfortify", "pander",
+              "scales", "gapminder", "htmlwidgets", "visdat", "naniar")
+
+# Install missing packages
+if(any(!(packages %in% installed.packages()))) {
+  install.packages(packages[!(packages %in% installed.packages())])
+}
+
+# Load all packages
+invisible(lapply(packages, library, character.only = TRUE))
+
+##
+knitr::opts_chunk$set(echo = TRUE, 
+                      warning = FALSE, 
+                      message = FALSE, 
+                      fig.width=8, 
+                      fig.height=5,
+                      fig.align = "center",
+                      comment = NA)
+```
+
+# Introduction
+
+Stroke is one of the major causes of death and long-term disability worldwide. It occurs when the blood supply to part of the brain is interrupted or reduced, preventing brain tissue from receiving enough oxygen and nutrients. Early identification of stroke risk factors is important because many related conditions, such as hypertension, heart disease, high glucose level, smoking, and obesity, can be monitored or managed through medical care and lifestyle changes.
+
+The dataset used in this study is a public healthcare stroke dataset. It contains patient-level information related to demographic characteristics, lifestyle factors, and medical history. The main goal of this analysis is to predict whether a patient has experienced a stroke based on these potential risk factors.
+
+**Scientific Objective**: Identify the common factors or characteristics that may contribute to stroke risk and build a classification model to predict whether a patient is likely to have a stroke.
+
+**Variable Descriptions**: The dataset includes demographic, behavioral, and medical variables. Each variable may be considered a potential risk factor for stroke. The target variable is `stroke`, where 1 indicates that the patient had a stroke and 0 indicates that the patient did not have a stroke.
+
+| Category | Variable Name | Description | Data Type |
+|------------------|------------------|------------------|------------------|
+| **Demographic** | Gender | Gender of the patient | Nominal |
+|  | Age | Age of the patient (truncated to whole numbers, but age is continuous) | Continuous |
+|  | Ever Married | Whether the patient has ever been married | Nominal |
+|  | Residence Type | Urban or rural residence | Nominal |
+| **Behavioral/Lifestyle** | Work Type | Type of work of the patient | Nominal |
+|  | Smoking Status | Smoking behavior of the patient | Nominal |
+| **Medical History** | Hypertension | Whether the patient has hypertension | Nominal |
+|  | Heart Disease | Whether the patient has heart disease | Nominal |
+| **Current Medical Condition** | Avg Glucose Level | Average glucose level in blood | Continuous |
+|  | BMI | Body Mass Index | Continuous |
+| **Target Variable** | Stroke | Whether the patient had a stroke | Binary (1 = Yes, 0 = No) |
+
+# Data Preparation
+
+This section focuses on data preparation for exploratory data analysis. Two main tasks are carried out: (1) addressing potential missing value issues, and (2) preparing variables for later classification analysis.
+
+**Missing Values**
+
+We first check missing values in the data set and decide whether appropriate actions need to be taken for visual exploratory analysis.
+
+```{r}
+stroke <- read.csv(
+  "https://raw.githubusercontent.com/Xiaoying-Ma/HW3/main/healthcare-dataset-stroke-data.csv"
+)
+
+stroke$bmi[stroke$bmi == ""] <- NA
+stroke$bmi <- as.numeric(stroke$bmi)
+
+colSums(is.na(stroke))
+summary(stroke)
+```
+
+```{r fig.align='center', fig.width=7, fig.height=4}
+# library(naniar)
+p <- gg_miss_var(stroke) + 
+  labs(title = "Missing Values per Variable") +
+  theme(plot.title = element_text(hjust = 0.5),
+        plot.margin = margin(t = 35, r = 10, b = 25, l = 30))
+ggplotly(p)
+
+```
+
+The above figure shows that only one variable contains missing values. Specifically, the clinical variable BMI has approximately 201 missing observations, representing about 3.9% of the dataset. Since the proportion of missing values is relatively small, we choose not to perform imputation. Instead, observations with missing values are removed from the data set before conducting exploratory analysis and model building.
+
+**Initial Variable Screening**
+
+After consulting relevant medical literature and domain knowledge, ten variables were selected as an initial set of predictors for stroke risk. These variables represent key demographic, lifestyle, and clinical factors that have been consistently associated with stroke occurrence.
+
+- **Demographic variables** (`age`, `gender`, `ever_married`) capture fundamental population characteristics. Age is one of the strongest non-modifiable risk factors for stroke, while gender differences in stroke incidence have been observed across many studies.
+
+- **Cardiovascular history variables** (`hypertension`, `heart_disease`) reflect underlying vascular health. Hypertension is widely recognized as the most important modifiable risk factor for stroke, while existing heart disease may increase the likelihood of thromboembolic events.
+
+- **Metabolic variables** (`avg_glucose_level`, `bmi`) capture aspects of metabolic health. Elevated glucose levels may indicate diabetes or impaired glucose regulation, both of which are associated with increased stroke risk. BMI provides a measure of obesity, which is linked to several cardiovascular risk factors.
+
+- **Lifestyle and socioeconomic variables** (`smoking_status`, `work_type`, `Residence_type`) represent behavioral and environmental influences. Smoking contributes to vascular damage and atherosclerosis, while occupation and residential environment may reflect differences in lifestyle, healthcare access, and overall health status.
+
+The variable `id` is excluded from the analysis because it serves only as a unique identifier and contains no predictive information. All remaining variables are retained for exploratory analysis and initial model development because they represent clinically plausible contributors to stroke occurrence.
+
+Among these candidate predictors, age, hypertension, heart disease, and average glucose level will remain under particular consideration throughout model development because previous medical research consistently identifies them as major stroke risk factors.
+
+```{r}
+var0 <- c(
+  "gender",
+  "age",
+  "hypertension",
+  "heart_disease",
+  "ever_married",
+  "work_type",
+  "Residence_type",
+  "avg_glucose_level",
+  "bmi",
+  "smoking_status",
+  "stroke"
+)
+
+stroke_complete <- na.omit(stroke)[, var0]
+```
+
+# Visual Exploratory Data Analysis
+
+This section examines variable distributions and inter-variable relationships, focusing on the response variable’s associations with other predictors. The goal is to guide feature engineering, identify potential outliers or skewed variables, and support initial screening for future classification modeling.
+
+## Univariate Distributions:
+
+We now examine the distributions of individual variables. This univariate analysis reveals patterns such as symmetry, skewness, anomalies, and sparse categories. These patterns provide useful information for data cleaning, transformation, and feature selection prior to multivariate modeling.
+
+### Continuous Risk Variables
+
+We first examine the distributions of three continuous variables: age, avg_glucose_level, and bmi, using histograms with kernel density curves.
+
+```{r}
+# Helper function to create a histogram with a kernel density curve
+hist_with_density <- function(data,
+                              variable,
+                              title = NULL,
+                              binwidth = NULL,
+                              color = "skyblue") {
+  
+  # Extract the selected variable from the data frame
+  values <- data[[variable]]
+  
+  # Remove missing values before plotting
+  values <- values[!is.na(values)]
+  
+  # Estimate the kernel density curve
+  dens <- density(values)
+  
+  # If binwidth is not specified, divide the data range into about 30 bins
+  if (is.null(binwidth)) {
+    binwidth <- diff(range(values)) / 30
+  }
+  
+  # Create an interactive plot using plotly
+  plot_ly() %>%
+    
+    # Add histogram layer
+    add_trace(
+      x = values,
+      type = "histogram",
+      histnorm = "probability density",
+      marker = list(
+        color = color,
+        line = list(color = "white", width = 1)
+      ),
+      opacity = 0.7,
+      name = "Histogram",
+      nbinsx = 30
+    ) %>%
+    
+    # Add kernel density curve layer
+    add_trace(
+      x = dens$x,
+      y = dens$y,
+      type = "scatter",
+      mode = "lines",
+      line = list(color = "darkred", width = 3),
+      fill = "tozeroy",
+      fillcolor = "rgba(255,0,0,0.1)",
+      name = "Density Curve"
+    ) %>%
+    
+    # Customize plot layout
+    layout(
+      title = ifelse(is.null(title),
+                     paste("Distribution of", variable),
+                     title),
+      xaxis = list(
+        title = list(text = variable, standoff = 0),
+        titlefont = list(size = 14)
+      ),
+      yaxis = list(
+        title = "Density",
+        titlefont = list(size = 14)
+      ),
+      legend = list(x = 0.85, y = 0.95),
+      hovermode = "closest",
+      margin = list(l = 50, r = 20, t = 100, b = 70)
+    )
+}
+```
+
+```{r fig.align='center', fig.width=8, fig.height=7}
+# Create histogram-density plots for continuous stroke risk variables
+p1 <- hist_with_density(
+  stroke_complete,
+  "age",
+  "Age Distribution with Density Curve"
+)
+
+p2 <- hist_with_density(
+  stroke_complete,
+  "avg_glucose_level",
+  "Average Glucose Level Distribution"
+)
+
+p3 <- hist_with_density(
+  stroke_complete,
+  "bmi",
+  "BMI Distribution"
+)
+
+# Arrange the three plots into a multi-panel figure
+fig1 <- subplot(
+  p1, p2, p3,
+  nrows = 2,
+  margin = 0.06,
+  shareX = FALSE,
+  shareY = FALSE,
+  titleX = TRUE,
+  titleY = TRUE
+)
+
+# Add an overall title and remove repeated legends
+fig1 <- fig1 %>%
+  layout(
+    title = "Distributions of Continuous Variables",
+    showlegend = FALSE
+  )
+
+# Display the final figure
+fig1
+```
+
+The continuous variables show distinct distributional patterns. `Age` is widely distributed across the sample, with many observations concentrated among middle-aged and older adults. This is important because stroke risk generally increases with age.
+
+`Average glucose level` is strongly right-skewed. Most patients have glucose values within a moderate range, but a smaller group has much higher glucose levels, suggesting possible diabetes or impaired glucose regulation.
+
+`BMI` is also slightly right-skewed, with most observations falling in the overweight range and some high-value outliers. Overall, the continuous variables exhibit varying degrees of positive skewness, particularly for average glucose level and BMI. Age appears more balanced and symmetric compared with the other continuous predictors. These distributional characteristics suggest that extreme values may exist for some risk factors and should be considered during subsequent modeling.
+
+
+### Bar charts for categorical variables
+
+The following bar charts show the distribution of the categorical variables, highlighting class proportions, imbalances, and rare categories at a glance.
+
+```{r fig.align='center', fig.width=8, fig.height=7}
+#library(plotly)
+#library(dplyr)
+
+# Use the cleaned stroke dataset
+df <- stroke_complete
+
+# Create bar chart for gender
+plot1 <- plot_ly() %>%
+  add_bars(
+    x = names(table(df$gender)),
+    y = as.numeric(table(df$gender)),
+    marker = list(color = "#1f77b4"),
+    text = as.numeric(table(df$gender)),
+    textposition = "auto",
+    name = "Gender"
+  ) %>%
+  layout(
+    xaxis = list(title = "Gender"),
+    yaxis = list(title = "Count")
+  )
+
+# Create bar chart for hypertension
+plot2 <- plot_ly() %>%
+  add_bars(
+    x = c("No (0)", "Yes (1)"),
+    y = as.numeric(table(df$hypertension)),
+    marker = list(color = "#1f77b4"),
+    text = as.numeric(table(df$hypertension)),
+    textposition = "auto",
+    name = "Hypertension"
+  ) %>%
+  layout(
+    xaxis = list(title = "Hypertension"),
+    yaxis = list(title = "Count")
+  )
+
+# Create bar chart for heart disease
+plot3 <- plot_ly() %>%
+  add_bars(
+    x = c("No (0)", "Yes (1)"),
+    y = as.numeric(table(df$heart_disease)),
+    marker = list(color = "#1f77b4"),
+    text = as.numeric(table(df$heart_disease)),
+    textposition = "auto",
+    name = "Heart Disease"
+  ) %>%
+  layout(
+    xaxis = list(title = "Heart Disease"),
+    yaxis = list(title = "Count")
+  )
+
+# Create bar chart for ever married
+plot4 <- plot_ly() %>%
+  add_bars(
+    x = names(table(df$ever_married)),
+    y = as.numeric(table(df$ever_married)),
+    marker = list(color = "#1f77b4"),
+    text = as.numeric(table(df$ever_married)),
+    textposition = "auto",
+    name = "Ever Married"
+  ) %>%
+  layout(
+    xaxis = list(title = "Ever Married"),
+    yaxis = list(title = "Count")
+  )
+
+# Create bar chart for smoking status
+plot5 <- plot_ly() %>%
+  add_bars(
+    x = names(table(df$smoking_status)),
+    y = as.numeric(table(df$smoking_status)),
+    marker = list(color = "#1f77b4"),
+    text = as.numeric(table(df$smoking_status)),
+    textposition = "auto",
+    name = "Smoking Status"
+  ) %>%
+  layout(
+    xaxis = list(title = "Smoking Status"),
+    yaxis = list(title = "Count")
+  )
+
+# Create bar chart for stroke outcome
+plot6 <- plot_ly() %>%
+  add_bars(
+    x = c("No Stroke (0)", "Stroke (1)"),
+    y = as.numeric(table(df$stroke)),
+    marker = list(color = "#1f77b4"),
+    text = as.numeric(table(df$stroke)),
+    textposition = "auto",
+    name = "Stroke"
+  ) %>%
+  layout(
+    xaxis = list(title = "Stroke Outcome"),
+    yaxis = list(title = "Count")
+  )
+
+# Combine all six plots into one multi-panel figure
+fig <- subplot(
+  plot1, plot2, plot3, plot4, plot5, plot6,
+  nrows = 2,
+  margin = 0.08,
+  shareX = FALSE,
+  titleX = TRUE,
+  titleY = TRUE
+) %>%
+  layout(
+    title = "Distribution of Selected Categorical Variables",
+    showlegend = FALSE,
+    font = list(size = 12),
+    height = 600
+  )
+
+# Display the final figure
+fig
+```
+
+The above figure shows that several categorical variables are highly imbalanced. The target variable `stroke` is strongly imbalanced, with far more patients in the non-stroke group than in the stroke group. `Hypertension` and `heart disease` are also imbalanced, with most patients not having these conditions.
+
+`Gender` and `ever-married` status are less severely imbalanced, while `smoking` status includes multiple categories with uneven group sizes. These patterns suggest that class imbalance should be considered during model evaluation, especially because the stroke outcome is rare.
+
+The variable `id` is excluded because it is only a patient identifier and does not provide predictive information.
+
+
+## Pairwise Relations:
+
+We next create a pairwise correlation matrix analyzing three continuous risk variables likely related to stroke risk: `age`, `avg_glucose_level`, and `bmi`.
+
+The pairwise scatter plot matrix displays the relationships among these continuous variables. The diagonal panels show density curves for each variable, the lower panels show scatter plots with loess smoothing curves, and the upper panels show correlation coefficients and p-values.
+
+
+```{r fig.align='center', fig.width=8, fig.height=7}
+# Function to create a pairwise scatter plot matrix
+pairwise_scatter_matrix <- function(data, vars) {
+  
+  # Count the number of selected variables
+  n_vars <- length(vars)
+  
+  # Create an empty list to store individual plots
+  subplots_list <- list()
+  
+  # Loop through rows and columns of the plot matrix
+  for (i in 1:n_vars) {
+    for (j in 1:n_vars) {
+      
+      # Define x-axis and y-axis variables
+      var_x <- vars[j]
+      var_y <- vars[i]
+      
+      if (i == j) {
+        
+        # Diagonal panels: density plots for each variable
+        values <- data[[var_y]]
+        values <- values[!is.na(values)]
+        dens <- density(values)
+        dens_df <- data.frame(x = dens$x, y = dens$y)
+        
+        p <- plot_ly(
+          dens_df,
+          x = ~x,
+          y = ~y,
+          type = "scatter",
+          mode = "lines",
+          fill = "tozeroy",
+          line = list(color = "#1f77b4", width = 2),
+          fillcolor = "rgba(31, 119, 180, 0.3)",
+          showlegend = FALSE
+        ) %>%
+          layout(
+            xaxis = list(title = var_y, showgrid = TRUE),
+            yaxis = list(title = "Density", showgrid = TRUE)
+          )
+        
+      } else if (i > j) {
+        
+        # Lower panels: scatter plots with loess smooth curves
+        valid_data <- data[
+          complete.cases(data[c(var_x, var_y)]),
+          c(var_x, var_y)
+        ]
+        
+        p <- plot_ly() %>%
+          add_trace(
+            x = valid_data[[var_x]],
+            y = valid_data[[var_y]],
+            type = "scatter",
+            mode = "markers",
+            marker = list(
+              size = 5,
+              color = "steelblue",
+              opacity = 0.6
+            ),
+            name = "Data",
+            showlegend = FALSE
+          )
+        
+        # Add loess curve when enough observations are available
+        if (nrow(valid_data) > 5) {
+          loess_fit <- loess(valid_data[[var_y]] ~ valid_data[[var_x]])
+          loess_pred <- predict(
+            loess_fit,
+            data.frame(x = valid_data[[var_x]])
+          )
+          
+          loess_df <- data.frame(
+            x = valid_data[[var_x]],
+            y = loess_pred
+          )
+          
+          loess_df <- loess_df[order(loess_df$x), ]
+          
+          p <- p %>%
+            add_trace(
+              x = loess_df$x,
+              y = loess_df$y,
+              type = "scatter",
+              mode = "lines",
+              line = list(color = "#d62728", width = 2),
+              name = "Loess",
+              showlegend = FALSE
+            )
+        }
+        
+        p <- p %>%
+          layout(
+            xaxis = list(title = var_x, showgrid = TRUE),
+            yaxis = list(title = var_y, showgrid = TRUE)
+          )
+        
+      } else {
+        
+        # Upper panels: correlation coefficient and p-value
+        cor_value <- cor(
+          data[[var_x]],
+          data[[var_y]],
+          use = "complete.obs"
+        )
+        
+        p_value <- cor.test(
+          data[[var_x]],
+          data[[var_y]],
+          use = "complete.obs"
+        )$p.value
+        
+        cor_text <- paste0(
+          "r = ", sprintf("%.3f", cor_value),
+          "\np = ", round(p_value, 3)
+        )
+        
+        p <- plot_ly() %>%
+          layout(
+            xaxis = list(
+              title = "",
+              showticklabels = FALSE,
+              showgrid = FALSE,
+              zeroline = FALSE,
+              showline = FALSE,
+              ticks = ""
+            ),
+            yaxis = list(
+              title = "",
+              showticklabels = FALSE,
+              showgrid = FALSE,
+              zeroline = FALSE,
+              showline = FALSE,
+              ticks = ""
+            ),
+            plot_bgcolor = "white",
+            paper_bgcolor = "white",
+            annotations = list(
+              text = cor_text,
+              font = list(size = 18, color = "#7f7f7f"),
+              xref = "paper",
+              yref = "paper",
+              x = 0.5,
+              y = 0.5,
+              showarrow = FALSE
+            )
+          )
+      }
+      
+      # Store each plot in the subplot list
+      subplots_list <- append(subplots_list, list(p))
+    }
+  }
+  
+  # Combine all panels into one matrix
+  fig <- subplot(
+    subplots_list,
+    nrows = n_vars,
+    shareX = FALSE,
+    shareY = FALSE,
+    titleX = TRUE,
+    titleY = TRUE,
+    margin = 0.05
+  )
+  
+  # Add overall title
+  fig <- fig %>%
+    layout(
+      title = "Pairwise Correlation Between Continuous Variables",
+      showlegend = FALSE,
+      plot_bgcolor = "white",
+      paper_bgcolor = "white"
+    )
+  
+  return(fig)
+}
+
+# Select continuous variables for the stroke dataset
+vars <- c("age", "avg_glucose_level", "bmi")
+
+# Create the pairwise scatter plot matrix
+p <- pairwise_scatter_matrix(stroke_complete, vars)
+
+# Display the plot
+p
+```
+
+The pairwise scatter plot matrix reveals generally weak-to-moderate positive associations among the continuous predictors. Age and BMI exhibit the strongest relationship among the three variables ($r = 0.333$), suggesting that older individuals tend to have slightly higher BMI values. Age and average glucose level also show a positive association ($r = 0.236$), indicating that glucose levels tend to increase modestly with age.
+
+The relationship between BMI and average glucose level is relatively weak ($r = 0.176$), although the positive correlation suggests that individuals with higher BMI may also tend to have somewhat elevated glucose levels. All three correlations are statistically significant due to the large sample size ($p < 0.001$), but their magnitudes remain relatively small.
+
+Overall, the continuous predictors demonstrate limited correlation with one another, suggesting that each variable may contribute distinct information regarding stroke risk. Since none of the observed correlations indicate strong collinearity, age, average glucose level, and BMI are retained as candidate predictors for subsequent classification modeling.
+
+## Individual Contributing Risk to Stroke
+
+In this section, we compare selected continuous variables between patients who experienced a stroke and those who did not. This helps us see whether the two groups show different patterns in age, glucose level, and BMI before fitting a formal classification model.
+
+### Grouped Boxplots- Coontinuous Variables
+
+```{r}
+# Load required libraries
+#library(plotly)
+#library(dplyr)
+
+# Function to create a grouped boxplot for a selected continuous variable
+create_boxplot <- function(data, variable, var_title) {
+  
+  # Remove observations with missing values
+  plot_data <- data %>%
+    filter(!is.na(.data[[variable]]))
+  
+  # Create boxplots comparing stroke and non-stroke groups
+  p <- plot_ly() %>%
+    
+    # Boxplot for patients without stroke
+    add_trace(
+      data = plot_data %>% filter(stroke == 0),
+      x = ~stroke,
+      y = as.formula(paste0("~", variable)),
+      type = "box",
+      name = "No Stroke",
+      fillcolor = "skyblue",
+      line = list(color = "steelblue", width = 2),
+      marker = list(color = "orange", size = 3),
+      boxmean = "sd",
+      showlegend = TRUE
+    ) %>%
+    
+    # Boxplot for patients with stroke
+    add_trace(
+      data = plot_data %>% filter(stroke == 1),
+      x = ~stroke,
+      y = as.formula(paste0("~", variable)),
+      type = "box",
+      name = "Stroke",
+      fillcolor = "skyblue",
+      line = list(color = "steelblue", width = 2),
+      marker = list(color = "orange", size = 3),
+      boxmean = "sd",
+      showlegend = TRUE
+    ) %>%
+    
+    # Customize plot layout
+    layout(
+      title = list(
+        text = var_title,
+        font = list(size = 14)
+      ),
+      margin = list(l = 50, r = 50, b = 50, t = 70),
+      xaxis = list(
+        title = "Stroke Status",
+        ticktext = c("No Stroke", "Stroke"),
+        tickvals = c(0, 1)
+      ),
+      yaxis = list(
+        title = var_title
+      ),
+      plot_bgcolor = "#f8f9fa",
+      paper_bgcolor = "white"
+    )
+  
+  return(p)
+}
+```
+
+```{r fig.align='center', fig.width=8, fig.height=7}
+# Create boxplot for age
+p1 <- create_boxplot(
+  data = stroke_complete,
+  variable = "age",
+  var_title = "Age"
+)
+
+# Create boxplot for average glucose level
+p2 <- create_boxplot(
+  data = stroke_complete,
+  variable = "avg_glucose_level",
+  var_title = "Average Glucose Level"
+)
+
+# Create boxplot for BMI
+p3 <- create_boxplot(
+  data = stroke_complete,
+  variable = "bmi",
+  var_title = "BMI"
+)
+
+# Arrange plots into a multi-panel figure
+fig3 <- subplot(
+  p1, p2, p3,
+  nrows = 2,
+  margin = 0.03,
+  shareX = FALSE,
+  shareY = FALSE,
+  titleX = TRUE,
+  titleY = TRUE
+)
+
+# Add overall title
+fig3 <- fig3 %>%
+  layout(
+    title = "Continuous Variables by Stroke Status",
+    showlegend = FALSE
+  )
+
+# Display figure
+fig3
+```
+
+The grouped boxplots show noticeable differences between the stroke and non-stroke groups. 
+
+`Age` shows the strongest separation. Patients who experienced a stroke tend to be substantially older, with a much higher median age and a distribution concentrated in the older age range. The limited overlap between the two groups suggests that age is likely an important predictor of stroke occurrence.
+
+`Average glucose level` also displays a clear difference between the groups. Individuals in the stroke group generally have higher glucose levels and a wider spread of observations. The stroke group contains a larger proportion of patients with elevated glucose values, indicating that abnormal glucose regulation may be associated with increased stroke risk.
+
+`BMI` exhibits considerably weaker separation. Although the stroke group has a slightly higher median BMI, the distributions overlap substantially and the overall difference between groups appears relatively modest. This suggests that BMI alone may have limited ability to distinguish stroke status.
+
+Overall, age provides the clearest distinction between stroke and non-stroke patients, followed by average glucose level. BMI shows a weaker univariate relationship with stroke but remains clinically relevant and may contribute useful information when considered together with other predictors in a multivariable classification model.
+
+### Grouped bar charts - Categorical Variables
+
+```{r}
+#library(plotly)
+#library(dplyr)
+
+# Function to create grouped bar chart for categorical variables
+create_grouped_bar_chart <- function(data, categorical_var, title = NULL) {
+  
+  # Create a copy of the data and label stroke status
+  plot_data <- data %>%
+    mutate(
+      Stroke_Status = factor(
+        stroke,
+        levels = c(0, 1),
+        labels = c("No Stroke", "Stroke")
+      ),
+      
+      # Convert the selected categorical variable to factor
+      !!sym(categorical_var) := as.factor(.data[[categorical_var]])
+    )
+  
+  # Calculate count and percentage of stroke status within each category
+  summary_data <- plot_data %>%
+    group_by(!!sym(categorical_var), Stroke_Status) %>%
+    summarise(count = n(), .groups = "drop") %>%
+    group_by(!!sym(categorical_var)) %>%
+    mutate(
+      percentage = count / sum(count) * 100,
+      total = sum(count)
+    ) %>%
+    ungroup()
+  
+  # Create hover text for interactive display
+  summary_data <- summary_data %>%
+    mutate(
+      hover_text = paste0(
+        "Category: ", !!sym(categorical_var), "<br>",
+        "Stroke Status: ", Stroke_Status, "<br>",
+        "Count: ", count, "<br>",
+        "Percentage: ", round(percentage, 1), "%"
+      )
+    )
+  
+  # Create grouped bar chart
+  fig <- plot_ly(
+    data = summary_data,
+    x = ~get(categorical_var),
+    y = ~percentage,
+    color = ~Stroke_Status,
+    type = "bar",
+    colors = c("#1f77b4", "#ff7f0e"),
+    text = ~paste0(round(percentage, 1), "%"),
+    textposition = "outside",
+    hoverinfo = "text",
+    hovertext = ~hover_text,
+    marker = list(
+      line = list(color = "white", width = 1.5)
+    )
+  ) %>%
+    layout(
+      title = ifelse(
+        is.null(title),
+        paste("Stroke Status by", categorical_var),
+        title
+      ),
+      xaxis = list(
+        title = categorical_var,
+        tickangle = -20
+      ),
+      yaxis = list(
+        title = "Percentage (%)",
+        ticksuffix = "%"
+      ),
+      barmode = "group",
+      legend = list(
+        title = list(text = "Stroke Status"),
+        orientation = "h",
+        yanchor = "bottom",
+        y = 0.9,
+        xanchor = "right",
+        x = 0.85
+      ),
+      plot_bgcolor = "#f5f5f5",
+      paper_bgcolor = "white"
+    )
+  
+  return(fig)
+}
+# Create grouped bar chart for hypertension
+q1 <- create_grouped_bar_chart(
+  stroke_complete,
+  categorical_var = "hypertension",
+  title = "Hypertension"
+)
+
+# Create grouped bar chart for heart disease
+q2 <- create_grouped_bar_chart(
+  stroke_complete,
+  categorical_var = "heart_disease",
+  title = "Heart Disease"
+)
+
+# Create grouped bar chart for gender
+q3 <- create_grouped_bar_chart(
+  stroke_complete,
+  categorical_var = "gender",
+  title = "Gender"
+)
+
+# Create grouped bar chart for ever married
+q4 <- create_grouped_bar_chart(
+  stroke_complete,
+  categorical_var = "ever_married",
+  title = "Ever Married"
+)
+
+# Create grouped bar chart for smoking status
+q5 <- create_grouped_bar_chart(
+  stroke_complete,
+  categorical_var = "smoking_status",
+  title = "Smoking Status"
+)
+
+# Create grouped bar chart for residence type
+q6 <- create_grouped_bar_chart(
+  stroke_complete,
+  categorical_var = "Residence_type",
+  title = "Residence Type"
+)
+
+# Arrange the six plots into a multi-panel figure
+fig4 <- subplot(
+  q1, q2, q3, q4, q5, q6,
+  nrows = 3,
+  margin = 0.03,
+  shareX = FALSE,
+  shareY = FALSE,
+  titleX = TRUE,
+  titleY = TRUE
+)
+
+# Add overall title and remove repeated legends
+fig4 <- fig4 %>%
+  layout(
+    title = "Stroke Status Across Categorical Variables",
+    showlegend = FALSE
+  )
+
+# Display figure
+fig4
+```
+
+
+The grouped bar charts reveal noticeable differences in stroke prevalence across several categorical variables. Among all predictors, `hypertension` and `heart disease` show the clearest associations with stroke. Patients without hypertension have a stroke prevalence of only 3.3%, whereas the prevalence increases to 13.3% among those with hypertension. A similar pattern is observed for heart disease, where stroke prevalence rises from 3.6% among patients without heart disease to 16.5% among those with heart disease.
+
+`Smoking status` also appears to be associated with stroke occurrence, although the relationship is less consistent. Former smokers have the highest observed stroke prevalence (6.8%), followed by current smokers (5.3%) and individuals who never smoked (4.5%). The relatively low prevalence among the "Unknown" category (2.0%) suggests that smoking history may contain useful predictive information but should be interpreted cautiously.
+
+`Gender` and `marital status` exhibit weaker differences. Stroke prevalence is 4.1% among females and 4.4% among males, indicating only a small gender effect in this dataset. Individuals who have been married show a higher prevalence of stroke than those who have never been married, although this pattern may partially reflect differences in age distribution.
+
+`Residence type` appears to have little relationship with stroke occurrence. The prevalence rates are nearly identical between rural (4.1%) and urban (4.4%) residents, suggesting that this variable may have limited predictive value when considered independently.
+
+Overall, hypertension and heart disease demonstrate the strongest univariate associations with stroke status, while smoking status shows moderate separation across categories. Gender, marital status, and residence type display weaker individual effects but may still contribute useful information when combined with other predictors in a multivariable classification model.
+
+
+Based on these exploratory analyses, the following recommendations are proposed for subsequent classification modeling:
+
+- *Prioritize Age as a Core Predictor*: Age consistently shows the strongest separation between the stroke and non-stroke groups and should be retained in all candidate models.
+
+- *Include Average Glucose Level as a Key Clinical Variable*:Patients with stroke tend to exhibit higher glucose levels, suggesting that glucose may provide meaningful predictive information regarding stroke risk.
+
+- *Retain Hypertension and Heart Disease*: Both variables demonstrate substantially higher stroke prevalence among affected individuals and appear to be the strongest categorical predictors in the dataset.
+## Recommendations for Logistic Regression Model
+
+Overall, age, hypertension, heart disease, and average glucose level emerge as the most promising predictors from the exploratory analysis and should serve as the foundation for subsequent classification models.
+
+**Core Predictors**
+
+- **age**: Age shows the strongest difference between stroke and non-stroke patients and should be retained in all candidate models.
+
+- **hypertension**: Patients with hypertension have a much higher stroke prevalence, making it an important clinical predictor.
+
+- **heart_disease**: Heart disease is strongly associated with a higher proportion of stroke cases.
+
+- **avg_glucose_level**: Average glucose level is higher and more variable among patients with stroke, suggesting useful predictive value.
+
+**Supplementary Predictors**
+
+- **bmi**: BMI shows only modest separation between groups, but it remains clinically relevant and may add information when combined with other predictors.
+
+- **smoking_status**: Smoking status shows some variation in stroke prevalence across categories and should be retained for further evaluation.
+
+- **gender**: Gender shows only a small difference in stroke prevalence but may still contribute in a multivariable model.
+
+- **ever_married**: This variable may partly reflect age-related differences and should be interpreted carefully.
+
+- **Residence_type**: Residence type shows very little difference between groups and may have limited independent predictive value.
+# CHD Risk Factors: A Multivariable Analysis
+
+In this section, logistic regression is used to estimate how demographic, clinical, and lifestyle factors influence the probability of stroke while controlling for other variables.
+
+## A Brief Introduction to Logistic Regression
+
+The general analytical form of the logistic regression model is given as follows:
+
+$$P[\text{CHD} = 1] = \frac{\exp(\beta_0 + \beta_1 R_1 + \beta_2 R_2 + \cdots + \beta_p R_p)}{1 + \exp(\beta_0 + \beta_1 R_1 + \beta_2 R_2 + \cdots + \beta_p R_p)}$$
+
+where $R_1, R_2, \cdots, R_p$ represent stroke-related risk factors such as age, hypertension, heart disease, glucose level, BMI, smoking status, and other patient characteristics. The parameters $\beta_0, \beta_1, \cdots, \beta_p$ are regression coefficients that describe the effect of each predictor on the log-odds of stroke.
+
+The sign of a coefficient indicates the direction of the relationship between a predictor and the outcome.
+
+A positive coefficient means that the predictor is associated with higher odds of stroke, holding other variables constant. A negative coefficient means that the predictor is associated with lower odds of stroke. The odds ratio is calculated as:
+
+$$\mathrm{OR} = e^{\beta_j}$$
+
+An odds ratio greater than 1 indicates increased odds of stroke, while an odds ratio less than 1 indicates decreased odds of stroke.
+
+
+## Building Logistic Regression
+
+We employ standard regression modeling strategies and best practices to develop two baseline models: a reduced model, developed with input from domain experts to include only the most important risk factors, and a full model, which incorporates all potentially significant variables identified during the exploratory data analysis (EDA). The optimal candidate model is then obtained through automatic model selection. The results of the three models are summarized in the following tables.
+
+```{r}
+# convert character variables to factors
+stroke_complete$stroke <- as.factor(stroke_complete$stroke)
+stroke_complete$gender <- as.factor(stroke_complete$gender)
+stroke_complete$hypertension <- as.factor(stroke_complete$hypertension)
+stroke_complete$heart_disease <- as.factor(stroke_complete$heart_disease)
+stroke_complete$ever_married <- as.factor(stroke_complete$ever_married)
+stroke_complete$work_type <- as.factor(stroke_complete$work_type)
+stroke_complete$Residence_type <- as.factor(stroke_complete$Residence_type)
+stroke_complete$smoking_status <- as.factor(stroke_complete$smoking_status)
+
+##
+# (1) REDUCED MODEL - with age, hypertension, heart disease, and average glucose level
+reduced_model <- glm(stroke ~ age + hypertension + heart_disease + avg_glucose_level, 
+                     data = stroke_complete, 
+                     family = binomial(link = "logit"))
+
+#kable(summary(reduced_model)$coef, caption="Inferential table of the reduced logistic regression model")
+
+# (2) FULL MODEL - with all predictor variables
+# Build full model
+full_model <- glm(stroke ~ ., 
+                  data = stroke_complete, 
+                  family = binomial(link = "logit"))
+
+#kable(summary(full_model)$coef, caption ="Inferential table of the full logistic regression model")
+
+# (3) AUTOMATIC VARIABLE SELECTION
+forward_model <- stepAIC(reduced_model, 
+                         scope = list(lower = reduced_model, upper = full_model),
+                         direction = "forward", 
+                         trace = FALSE)
+
+kable(summary(forward_model)$coef, 
+      caption = "Inferential table of the optimal candidate logistic regression model")
+```
+
+- **Age** is the strongest predictor in the model (z = 12.12, p < 0.001). The positive coefficient indicates that the odds of stroke increase as age increases.
+
+- **Hypertension** is a significant clinical risk factor (β = 0.540, p = 0.002). Patients with hypertension have higher odds of stroke compared with those without hypertension.
+
+- **Heart disease** is positively associated with stroke risk (β = 0.404, p = 0.047). Although its effect size is smaller than that of age and hypertension, it remains statistically significant after adjusting for the other variables.
+
+- **Average glucose level** is also a significant predictor (β = 0.0048, p < 0.001). Higher glucose levels are associated with increased odds of stroke, suggesting that impaired glucose regulation may contribute to stroke risk.
+
+Overall, age emerges as the most influential predictor, while hypertension, heart disease, and average glucose level provide additional independent information for distinguishing between stroke and non-stroke patients.
+
+## Building More Interpretable Model
+
+In this section, we discretize two clinical variables, `avg_glucose_level` and `bmi`, to make the logistic regression model easier to interpret. The purpose is to examine whether grouped clinical risk categories provide a clearer explanation of stroke risk.
+
+```{r}
+# Create a glucose category based on common clinical cutoffs
+stroke_complete$glucose_cat <- cut(
+  stroke_complete$avg_glucose_level,
+  breaks = c(-Inf, 100, 126, Inf),
+  labels = c("Normal", "Pre-diabetes", "Diabetes"),
+  right = FALSE
+)
+
+# Create a BMI category based on standard BMI groupings
+stroke_complete$bmi_cat <- cut(
+  stroke_complete$bmi,
+  breaks = c(-Inf, 18.5, 25, 30, Inf),
+  labels = c("Underweight", "Normal", "Overweight", "Obese"),
+  right = FALSE
+)
+
+# Rename data frame for the new model
+stroke_new <- stroke_complete
+
+# Remove original continuous variables after discretization
+stroke_new$avg_glucose_level <- NULL
+stroke_new$bmi <- NULL
+
+# Reduced model with key predictors and categorized glucose
+reduced_model_new <- glm(
+  stroke ~ age + hypertension + heart_disease + glucose_cat,
+  data = stroke_new,
+  family = binomial(link = "logit")
+)
+
+# Full model with all candidate predictors
+full_model_new <- glm(
+  stroke ~ .,
+  data = stroke_new,
+  family = binomial(link = "logit")
+)
+
+# Automatic forward variable selection
+forward_model_new <- stepAIC(
+  reduced_model_new,
+  scope = list(lower = reduced_model_new, upper = full_model_new),
+  direction = "forward",
+  trace = FALSE
+)
+
+# Display selected model results
+kable(
+  summary(forward_model_new)$coef,
+  caption = "Inferential table of the optimal candidate logistic regression model after discretization"
+)
+```
+
+After discretization, age, hypertension, heart disease, and diabetes-level glucose emerge as the strongest independent predictors of stroke risk. In contrast, the pre-diabetes category does not show a statistically significant effect after adjusting for the other variables in the model.
+
+More specifically:
+
+- **Age** remains the most influential predictor of stroke risk (β = 0.068, p < 0.001). The positive coefficient indicates that the odds of stroke increase substantially with increasing age.
+
+- **Hypertension** continues to be a significant risk factor (β = 0.542, p = 0.002). Patients with hypertension have higher odds of stroke than those without hypertension.
+
+- **Heart disease** remains statistically significant (β = 0.414, p = 0.042), indicating that individuals with a history of heart disease are at greater risk of stroke.
+
+- Compared with patients in the normal glucose category, those in the **Diabetes** category have significantly higher odds of stroke (β = 0.607, p < 0.001).
+
+- The **Pre-diabetes** category does not differ significantly from the normal glucose group (β = 0.058, p = 0.796), suggesting that mildly elevated glucose levels alone may not be sufficient to independently predict stroke risk after accounting for age and cardiovascular conditions.
+
+Overall, the discretized model produces results that are consistent with the original logistic regression model while offering a more clinically interpretable framework. Age remains the dominant predictor, while hypertension, heart disease, and diabetic-level glucose provide additional independent information for identifying individuals at elevated risk of stroke.
+
+The above inference table suggests that some additional feature engineering could improve the performance of the model.
+
+## Additional Feature Engineering
+
+he results suggest that further simplification of the glucose categories may improve model interpretability. Since the Pre-diabetes category is not significantly different from the Normal category (p = 0.796), these two groups can be combined into a single reference category. This results in a simpler binary glucose variable representing normal-to-moderately elevated glucose levels versus diabetic-level glucose.
+
+The remaining significant predictors, including age, hypertension, and heart disease, are already naturally interpretable and do not require additional regrouping. Therefore, the final feature engineering step focuses on creating a binary glucose indicator based on the clinical diabetes threshold.
+
+The following code implements the revised glucose categorization and prepares the final analytic dataset.
+
+
+```{r}
+# Create a simplified glucose category
+stroke_complete$glucose_binary <- cut(
+  stroke_complete$avg_glucose_level,
+  breaks = c(-Inf, 126, Inf),
+  labels = c("<=126", ">126"),
+  right = FALSE
+)
+
+# Create final analytic dataset
+finalStrokeData <- stroke_complete
+
+# Remove original continuous glucose variable
+finalStrokeData$avg_glucose_level <- NULL
+
+# Select variables for the final model
+final_vars <- c(
+  "stroke",
+  "age",
+  "hypertension",
+  "heart_disease",
+  "bmi_cat",
+  "glucose_binary",
+  "gender",
+  "ever_married",
+  "smoking_status",
+  "Residence_type"
+)
+
+AnalyticStrokeData <- finalStrokeData[, final_vars]
+```
+
+- The exact standard error is given by
+
+$$SE(\beta_{\text{diff}}) = \sqrt{0.016126186 + 0.025509793 - 2\times 0.007299454} = \sqrt{0.02703707} = 0.1644295.$$
+
+- The 95% confidence interval is given by
+
+$$\beta_{\text{diff}} \in (0.2627645 - 1.96\times 0.1644295, 0.2627645 - 1.96\times 0.1644295)=(-0.268134, 0.35495)$$
+Since the Pre-diabetes category is not statistically different from the Normal glucose category (p = 0.796), we combine these two groups into a single reference category. This simplifies the model and improves interpretability while preserving the clinically meaningful distinction between diabetic and non-diabetic glucose levels.
+
+Therefore, we create a binary glucose variable using 126 mg/dL as the threshold. Individuals with glucose levels below 126 mg/dL are classified into one group, while those with diabetic-level glucose measurements (≥126 mg/dL) form the second group.
+
+```{r}
+# Create a simplified glucose category
+stroke_complete$glucose_binary <- cut(
+  stroke_complete$avg_glucose_level,
+  breaks = c(-Inf, 126, Inf),
+  labels = c("<=126", ">126"),
+  right = FALSE
+)
+```
+
+The following code re-engineers the variables suggested above.
+
+## Identifying Final Model
+
+We refit the logistic regression model using the re-engineered data in this section.
+
+```{r}
+# Create final analytic dataset
+finalStrokeData <- stroke_complete
+
+# Remove the original continuous glucose variable
+finalStrokeData$avg_glucose_level <- NULL
+
+# Select variables for the final model
+final_vars <- c(
+  "stroke",
+  "age",
+  "hypertension",
+  "heart_disease",
+  "glucose_binary",
+  "bmi",
+  "gender",
+  "ever_married",
+  "smoking_status",
+  "Residence_type"
+)
+
+AnalyticStrokeData <- finalStrokeData[, final_vars]
+
+# Convert categorical variables to factors
+AnalyticStrokeData$stroke <- as.factor(AnalyticStrokeData$stroke)
+AnalyticStrokeData$hypertension <- as.factor(AnalyticStrokeData$hypertension)
+AnalyticStrokeData$heart_disease <- as.factor(AnalyticStrokeData$heart_disease)
+AnalyticStrokeData$glucose_binary <- as.factor(AnalyticStrokeData$glucose_binary)
+AnalyticStrokeData$gender <- as.factor(AnalyticStrokeData$gender)
+AnalyticStrokeData$ever_married <- as.factor(AnalyticStrokeData$ever_married)
+AnalyticStrokeData$smoking_status <- as.factor(AnalyticStrokeData$smoking_status)
+AnalyticStrokeData$Residence_type <- as.factor(AnalyticStrokeData$Residence_type)
+
+# Reduced model with core predictors
+reduced_model_final <- glm(
+  stroke ~ age + hypertension + heart_disease,
+  data = AnalyticStrokeData,
+  family = binomial(link = "logit")
+)
+
+# Full model with all candidate predictors
+full_model_final <- glm(
+  stroke ~ .,
+  data = AnalyticStrokeData,
+  family = binomial(link = "logit")
+)
+
+# Automatic forward variable selection
+forward_model_final <- stepAIC(
+  reduced_model_final,
+  scope = list(lower = reduced_model_final, upper = full_model_final),
+  direction = "forward",
+  trace = FALSE
+)
+
+# Display final selected model
+kable(
+  summary(forward_model_final)$coef,
+  caption = "Inferential table of the final candidate logistic regression model based on the re-engineered data"
+)
+```
+
+The automatic variable selection model based on the re-engineered dataset identifies the most useful predictors after simplifying glucose into a binary clinical category. This step evaluates whether the binary glucose indicator improves interpretability while retaining the major predictors identified earlier.
+
+Based on the selected candidate model, we then fit the final working logistic regression model using the clinically important variables identified from EDA and model selection.
+
+```{r}
+# Final working logistic regression model
+FinalWorkingModel <- glm(
+  stroke ~ age + hypertension + heart_disease + glucose_binary,
+  data = AnalyticStrokeData,
+  family = binomial(link = "logit")
+)
+
+# Display final working model results
+kable(
+  summary(FinalWorkingModel)$coef,
+  caption = "Inferential table of the final working logistic regression model based on the re-engineered dataset"
+)
+```
+
+The final working logistic regression model identifies four statistically significant predictors of stroke risk: age, hypertension, heart disease, and elevated glucose level (>126 mg/dL). All coefficients are positive, indicating that these factors are associated with increased odds of stroke.
+
+More specifically:
+
+Age remains the strongest predictor in the model (β = 0.068, p < 0.001), indicating that stroke risk increases substantially with advancing age.
+Hypertension is a significant independent risk factor (β = 0.543, p = 0.002). Individuals with hypertension have higher odds of stroke than those without hypertension.
+Heart disease is also positively associated with stroke occurrence (β = 0.415, p = 0.041), suggesting that existing cardiovascular conditions contribute additional risk.
+Individuals with glucose levels greater than 126 mg/dL have significantly higher odds of stroke than those with lower glucose levels (β = 0.593, p < 0.001).
+
+Compared with the earlier models, the final working model achieves a simpler and more clinically interpretable structure while retaining the most important predictors identified throughout the exploratory and modeling process. The results consistently indicate that age, hypertension, heart disease, and diabetic-level glucose are the primary factors associated with stroke risk in this dataset.
+
+# Discussion: Using the Model, Recommendations, and Limitations
+
+**How to Calculate the Risk Score?**
+
+The final model is a standard logistic regression model, and the predicted probability of stroke can be calculated using the estimated regression coefficients. First, compute the linear predictor (LP):
+
+$$
+LP = -7.2803 + (0.0678 \times age) + (0.5431 \times hypertension) + (0.4154 \times heart_disease) + (0.5931 \times glucose_binary>126)
+$$
+
+where:
+
+age = patient's age in years
+hypertension = 1 if hypertension is present, 0 otherwise
+heart_disease = 1 if heart disease is present, 0 otherwise
+glucose_binary>126 = 1 if average glucose level is greater than 126 mg/dL, 0 otherwise
+
+The predicted probability of stroke is then calculated as
+
+$$
+P(\text{Stroke}=1)=\frac{\exp(LP)}{1+\exp(LP)}
+$$
+
+Example
+
+Consider a 70-year-old patient with hypertension, heart disease, and an average glucose level above 126 mg/dL.
+
+The linear predictor is
+
+$$
+LP=-7.2803+(0.0678\times70)+(0.5431\times1)+(0.4154\times1)+(0.5931\times1)
+$$
+
+which gives
+
+$$
+LP = -7.2803 + 4.7460 + 0.5431 + 0.4154 + 0.5931
+= -0.9827
+$$
+
+The predicted probability of stroke is therefore
+
+$$
+\frac{e^{-0.9827}}
+{1+e^{-0.9827}}
+\approx
+\frac{0.374}
+{1.374}
+\approx 0.272
+$$
+
+or approximately 27.2%.
+
+This probability can be interpreted as the estimated risk of stroke for an individual with these characteristics. In practice, the calculation can be implemented in a spreadsheet, statistical software package, or clinical decision-support system.
+
+**Practical Recommendations**
+
+Based on the final model findings, several practical recommendations emerge. First, older patients should be considered a higher-risk group because age shows the strongest and most consistent association with stroke risk. This suggests that age can be used as an important screening factor when identifying patients who may benefit from closer monitoring.
+
+Second, patients with hypertension should be prioritized for blood pressure control through medication adherence, lifestyle modification, and regular clinical follow-up. Hypertension remains a significant predictor even after adjusting for age, heart disease, and glucose level.
+
+Third, individuals with a history of heart disease should receive careful cardiovascular monitoring because heart disease is associated with increased odds of stroke in the final model.
+
+Finally, patients with average glucose levels above 126 mg/dL should be considered at elevated risk. Glucose control and diabetes management may be important components of stroke prevention.
+
+Overall, the model suggests that stroke prevention efforts should focus especially on older adults and patients with hypertension, heart disease, or diabetic-level glucose measurements.
+
+**Limitations**
+
+everal limitations should be acknowledged. First, the model assumes a linear relationship between age and the log-odds of stroke, which may not fully capture risk patterns across all age ranges. Second, glucose level was simplified into a binary category using 126 mg/dL as the threshold. While this improves interpretation, it also reduces information from the original continuous variable.
+
+Third, the model was developed using an observational dataset, so the results describe associations rather than causal effects. Fourth, the stroke outcome is highly imbalanced, with far fewer stroke cases than non-stroke cases, which may affect model sensitivity and predictive performance.
+
+Finally, important risk factors such as family history, physical activity, diet, medication use, prior stroke history, and socioeconomic status are not included in the dataset. The model has also not been externally validated in an independent population. Therefore, the results should be interpreted as exploratory and should not be used for clinical decision-making without further validation.
